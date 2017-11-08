@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@color/colorPrimary"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="Please schedule your  pick up time"
+        android:textColor="#fff"
+        android:textSize="20sp" />
+
+    <!--Food customer can schedule his food pick up time at the locker-->
+
+    <RadioGroup android:id="@+id/rg_sel_time"
+        android:layout_width="match_parent"
+        android:paddingLeft="20dp"
+        android:paddingTop="10dp"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+       <!--
+       <RadioButton
+            android:id="@+id/rb_0"
+            android:padding="4dp"
+            android:checked="true"
+            android:textSize="18sp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="11:00 am" />
+-->
+
+    </RadioGroup>
+
+        <!--android:layout_alignParentBottom="true"-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="110dp"
+        android:background="#aa000000"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:onClick="onClick"
+        android:orientation="horizontal">
+
+    <!--Food customer confirms his food selection and
+    pick up time scheduling at the locker by clicking "confirm payment"
+    then a request to the defined payment provider should be sent in
+    the background-->
+
+        <TextView
+            android:id="@+id/tv_pay"
+            android:layout_width="0dp"
+            android:layout_weight="3"
+            android:layout_height="match_parent"
+            android:background="#22c222"
+            android:clickable="true"
+            android:gravity="center"
+            android:onClick="onClick"
+            android:text="confirm payment"
+            android:textColor="#fff"
+            android:textSize="28sp" />
+
+    <!--shows the value (in RMB) of the selected food by the customer -->
+
+        <TextView
+            android:id="@+id/tv_show_money"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="15dp"
+            android:gravity="center"
+            android:layout_marginRight="15dp"
+            android:text="RMB ￥18"
+            android:textColor="#fff"
+            android:textSize="30sp" />
+    </LinearLayout>
+</LinearLayout>
