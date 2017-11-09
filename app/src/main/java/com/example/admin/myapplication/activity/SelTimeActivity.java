@@ -3,6 +3,7 @@ package com.example.admin.myapplication.activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,6 +21,7 @@ import android.widget.Toast;
 
 import com.example.admin.myapplication.AppConstant;
 import com.example.admin.myapplication.R;
+import com.example.admin.myapplication.bean.OrderBean;
 import com.example.admin.myapplication.bean.ScheduleBean;
 import com.example.admin.myapplication.utils.Net;
 import com.example.admin.myapplication.view.ScheduleRadioButton;
@@ -28,16 +30,22 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.util.ArrayList;
 
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class SelTimeActivity extends AppCompatActivity implements View.OnClickListener {
@@ -53,6 +61,11 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
     public double mComboMoney;    // price
     public String mComboName;     // comboName
     private int mComboId;         // comboId
+
+    // data of pay for successful
+    private String mOrdersId;
+    private OrderBean mCurrentOrder;
+
     private Handler handler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
@@ -89,15 +102,16 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
 
         NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
         style.setBigContentTitle("PIN of pick up food");
-        style.addLine("You pick up food time is: ").
+        /*style.addLine("You pick up food time is: ").
                 addLine("2017.10.24 10:15").
-                addLine("Thank you for you using our produce");
+                addLine("Thank you for you using our produce");*/
 
         android.support.v4.app.NotificationCompat.Builder nb = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.icon_cart)   // must have small icon
                 .setContentTitle("PIN of pick up food")
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.logo))
                 .setContentInfo("STIEI")
+                .setContentText("Locker:" + mCurrentOrder.lockerNumber + "; PIN: " + mCurrentOrder.PIN)
                 .setTicker("scroll information text")
                 .setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE)  // sound and vibrate
                 .setOngoing(false)   // Forever show, can't remove by yourself.
@@ -132,7 +146,7 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
         // show the price
         tvShowMoney.setText("RMB ￥" + mComboMoney);
 
-        // TODO get the schedule to show
+        // get the schedule to show
         getScheduleFromServer();
 
         // get user scheduled food pick up time
@@ -199,12 +213,8 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
             }
             // get the time of selected button via checked radio button
             RadioButton checkBtn = findViewById(rgSelTime.getCheckedRadioButtonId());
-            int mBoxId = requireServerToPayFor(mComboMoney, (String) checkBtn.getText());
+            requireServerToPayFor(mComboMoney, (String) checkBtn.getText());
 
-            Log.i(TAG, "onClick: " + checkBtn.getText());
-            if (mBoxId > 0) {   // if the box id is less than 0, it mean have error in request server.
-                handler.sendEmptyMessage(PAY_FOR_SUCCESS);
-            }
         }
     }
 
@@ -215,7 +225,7 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
     * @arg time String
     * @return int, the combo number. If return -1, it mean have error at pay for.
      */
-    private int requireServerToPayFor(double money, final String time) {
+    private void requireServerToPayFor(double money, final String time) {
         final OkHttpClient okHttpClient = Net.getOkHttpClient();
 
         // time time is "12:00", isn't "12:00:00"
@@ -230,26 +240,58 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
                     Request request = new Request.Builder()
                             .post(new FormBody.Builder().build())
                             //.addHeader("content-type", "application/json;charset:utf-8")
-                            .url(AppConstant.SERVER_PAY_FOR_POST_URL + "?combo_id="+mComboId+"&pickup_time="+comboTime)
+                            .url(AppConstant.SERVER_ORDER_URL + "?combo_id="+mComboId+"&pickup_time="+comboTime)
                             .build();
 
                     Response response = okHttpClient.newCall(request).execute();
                     String result = response.body().string();
                     Log.i(TAG, "onResponse: " + result);
+                    if(result != null) {
+                        JSONObject resObj = new JSONObject(result);
+                        mOrdersId = resObj.getString("orders_id");
+
+                        if(mOrdersId != null && !mOrdersId.isEmpty()) {
+                            // pay for success.
+                            // save the order id to native
+                            //SharedPreferences sp = getApplication().getSharedPreferences(AppConstant.USER_ORDERS, MODE_PRIVATE);
+                            //sp.edit().putString(AppConstant.ORDERS_ID, mOrdersId).apply();
+                            // TODO don't test
+                            FileOutputStream fos = getApplication().openFileOutput(AppConstant.USER_ORDERS, MODE_APPEND);
+                            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+                            bw.write(mOrdersId);
+                            bw.newLine();
+                            bw.close();
+                            fos.close();
+
+                            // get the order info via order_id
+                            Net.getInstance().get(AppConstant.SERVER_ORDER_URL + "/" + mOrdersId, new Callback() {
+                                @Override
+                                public void onFailure(Call call, IOException e) {
+                                    handler.sendEmptyMessage(PAY_FOR_ERROR);
+                                }
+                                @Override
+                                public void onResponse(Call call, Response response) throws IOException {
+                                    String orderJson = response.body().string();
+                                    Log.i(TAG, "onResponse: " + orderJson);
+                                    mCurrentOrder = new OrderBean(orderJson);
+                                    handler.sendEmptyMessage(PAY_FOR_SUCCESS);
+                                }
+                            });
+                        }else {
+                            handler.sendEmptyMessage(PAY_FOR_ERROR);
+                        }
+                    }
                     // parse result(json)
 
                 } catch (IOException e) {
                     e.printStackTrace();
+                    handler.sendEmptyMessage(PAY_FOR_ERROR);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    handler.sendEmptyMessage(PAY_FOR_ERROR);
                 }
             }
         }).start();
 
-        if (false) {  // if request server error, should send the message by handle
-            handler.sendEmptyMessage(PAY_FOR_ERROR);
-            return -1;
-        }
-
-        // if pay for is successful, return the combo number
-        return 1;
     }
 }
