@@ -237,10 +237,16 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
                 try {
                     Log.i(TAG, "requireServerToPayFor: combo_id = " + mComboId + "; pickup_time = " + time);
 
+                    FormBody formBody = new FormBody.Builder()
+                            .add("combo_id", ""+mComboId)
+                            .add("pickup_time", comboTime)
+                            .build();
+
                     Request request = new Request.Builder()
-                            .post(new FormBody.Builder().build())
-                            //.addHeader("content-type", "application/json;charset:utf-8")
-                            .url(AppConstant.SERVER_ORDER_URL + "?combo_id="+mComboId+"&pickup_time="+comboTime)
+                            .addHeader("content-type", "application/json;charset:utf-8")
+                            .post(formBody)
+                            //.url(AppConstant.SERVER_ORDER_URL + "?combo_id="+mComboId+"&pickup_time="+comboTime)
+                            .url(AppConstant.SERVER_ORDER_URL)
                             .build();
 
                     Response response = okHttpClient.newCall(request).execute();
@@ -253,8 +259,6 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
                         if(mOrdersId != null && !mOrdersId.isEmpty()) {
                             // pay for success.
                             // save the order id to native
-                            //SharedPreferences sp = getApplication().getSharedPreferences(AppConstant.USER_ORDERS, MODE_PRIVATE);
-                            //sp.edit().putString(AppConstant.ORDERS_ID, mOrdersId).apply();
                             // TODO don't test
                             FileOutputStream fos = getApplication().openFileOutput(AppConstant.USER_ORDERS, MODE_APPEND);
                             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
