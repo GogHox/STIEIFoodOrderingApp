@@ -44,8 +44,10 @@ import java.util.ArrayList;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class SelTimeActivity extends AppCompatActivity implements View.OnClickListener {
@@ -235,16 +237,14 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
             @Override
             public void run() {
                 try {
-                    Log.i(TAG, "requireServerToPayFor: combo_id = " + mComboId + "; pickup_time = " + time);
+                    Log.i(TAG, "requireServerToPayFor: combo_id = " + mComboId + "; pickup_time = " + comboTime);
 
-                    FormBody formBody = new FormBody.Builder()
-                            .add("combo_id", ""+mComboId)
-                            .add("pickup_time", comboTime)
-                            .build();
+                    String bodyJson = "{\"combo_id\": "+mComboId+", \"pickup_time\": \""+comboTime+"\"}";
+                    RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), bodyJson);
 
                     Request request = new Request.Builder()
                             .addHeader("content-type", "application/json;charset:utf-8")
-                            .post(formBody)
+                            .post(requestBody)
                             //.url(AppConstant.SERVER_ORDER_URL + "?combo_id="+mComboId+"&pickup_time="+comboTime)
                             .url(AppConstant.SERVER_ORDER_URL)
                             .build();
