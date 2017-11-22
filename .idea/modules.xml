@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/FoodOrderingCustomerApp.iml" filepath="$PROJECT_DIR$/FoodOrderingCustomerApp.iml" />
+      <module fileurl="file://E:\SmartLockProject\STIEIFoodOrderingApp\FoodOrderingCustomerApp.iml" filepath="E:\SmartLockProject\STIEIFoodOrderingApp\FoodOrderingCustomerApp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/STIEIFoodOrderingApp.iml" filepath="$PROJECT_DIR$/STIEIFoodOrderingApp.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/testmodule/testmodule.iml" filepath="$PROJECT_DIR$/testmodule/testmodule.iml" />
     </modules>

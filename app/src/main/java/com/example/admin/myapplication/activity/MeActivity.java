@@ -57,6 +57,7 @@ public class MeActivity extends AppCompatActivity {
         }
     });
     private TextView tvNoDataHint;
+    private String TAG = "MeActivity";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -91,13 +92,16 @@ public class MeActivity extends AppCompatActivity {
     }
 
     public void getOrdersFromServer() {
+        FileInputStream fis = null;
         try {
             // 1. get the order id from native file
-            FileInputStream fis = this.openFileInput(AppConstant.USER_ORDERS);
+            fis = getApplication().openFileInput(AppConstant.USER_ORDERS);
+
             BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 
             String orderId;
             while((orderId = br.readLine()) != null){
+                Log.i(TAG, "getOrdersFromServer: " + orderId);
                 orderNum++;
                 // 2. request server to get the order information.
                 Net.getInstance().get(AppConstant.SERVER_ORDER_URL + "/" + orderId, new Callback() {
@@ -121,6 +125,12 @@ public class MeActivity extends AppCompatActivity {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                fis.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return ;
     }
