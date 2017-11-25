@@ -32,7 +32,9 @@ import java.util.ArrayList;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
-
+/**
+ * Created by goghox on 11/7/17.
+ */
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private RadioGroup rgCombo;
@@ -43,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageView ivShowPic1, ivShowPic2, ivShowPic3;
 
     private final int GET_DATA_SUCCESS = 1;
+    private final int NETWORK_ERROR = 2;
     /* arg */
     private int selectComboIndex = 0;
     private String TAG = "MainActivity";
@@ -51,24 +54,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<ImageView> comboShowPicViewList = new ArrayList<>();
     private ArrayList<ComboBean> comboList = new ArrayList<>();
     private ArrayList<LinearLayout> comboLayoutList = new ArrayList<>();
-    private Handler handler = new Handler(new Handler.Callback() {
+    private Handler mHandler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
-            if (msg.what == GET_DATA_SUCCESS){
-                updateView();
+            switch (msg.what) {
+                case GET_DATA_SUCCESS:
+                    updateView();
+                    break;
+                case NETWORK_ERROR:
+                    Toast.makeText(getApplication(), "Network Error, Please restart app!", Toast.LENGTH_SHORT).show();
+                    break;
             }
-            return false;
+            return true;
         }
     });
 
     private void updateView() {
-        for (int i = 0; i < comboList.size(); i++){
-            ComboBean comboBean = comboList.get(i);
-            comboMoneyViewList.get(i).setText("￥ " + comboBean.money);
-            comboDescriptionViewList.get(i).setText("" + comboBean.description);
+            for (int i = 0; i < comboList.size(); i++){
+                ComboBean comboBean = comboList.get(i);
+                comboMoneyViewList.get(i).setText("￥ " + comboBean.money);
+                comboDescriptionViewList.get(i).setText("" + comboBean.description);
 
             if(comboBean.combo_available == 0){
-                // TODO can't select
                 comboLayoutList.get(i).setClickable(false);
                 comboLayoutList.get(i).setBackgroundColor(Color.GRAY);
             }
@@ -85,44 +92,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         initView();
-        initData();
+        requestServerToGetInformation();
     }
 
     @Override
-    protected void onRestart() {
-        super.onRestart();
-        
+    protected void onResume() {
+        super.onResume();
+
         // reset the RadioButton status
         rbCombo1.setChecked(false);
         rbCombo2.setChecked(false);
         rbCombo3.setChecked(false);
-
-    }
-    private void initData() {
-       /* free space for server connection integration:
-       server request to show the provided food portfolio */
-        requestServerToGetInformation();
     }
 
     /*
-    * connect the server
-    * */
+        * connect the serve
+        * free space for server connection integration:
+        * server request to show the provided food portfolio
+        * */
     private void requestServerToGetInformation() {
         Net net = Net.getInstance();
-        Log.i(TAG, "requestServerToGetInformation: Start connect server");
         net.get(AppConstant.SERVER_COMBO_URL, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                Log.i(TAG, "onFailure: connect error; " + e.getMessage());
+                mHandler.sendEmptyMessage(NETWORK_ERROR);
             }
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                // get the JSON from responses.
-                String jsonStr = response.body().string();
-                Log.i(TAG, "onResponse: --------------------------------" + jsonStr);
-                parseJsonAndUpdateView(jsonStr.trim());
+                if(response.code() == 200) {
+                    // get the JSON from responses.
+                    String jsonStr = response.body().string();
+                    Log.i(TAG, "onResponse: --------------------------------" + jsonStr);
+                    parseJsonAndUpdateView(jsonStr.trim());
+                }else {
+                    mHandler.sendEmptyMessage(NETWORK_ERROR);
+                }
             }
         });
     }
@@ -130,10 +135,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     // This function run in child thread.
     private void parseJsonAndUpdateView(String json) {
         try {
-            //JSONObject object = new JSONObject(json);
-            //JSONArray comboArr = object.getJSONArray("combo");
             JSONArray comboArr = new JSONArray(json);
-
             for(int i = 0; i < comboArr.length(); i++){
                 JSONObject comboItemObj = comboArr.getJSONObject(i);
                 ComboBean comboBean = new ComboBean(comboItemObj);
@@ -142,10 +144,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
         if (comboList.size() >= 0){
             // information main thread update view
-            handler.sendEmptyMessage(GET_DATA_SUCCESS);
+            mHandler.sendEmptyMessage(GET_DATA_SUCCESS);
         }
     }
 
@@ -231,7 +232,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // enter next activity
         Intent intent = new Intent(this, SelTimeActivity.class);
         if(comboList.size() < selectComboIndex+1){
-            Toast.makeText(this, "Network error, please restart app", Toast.LENGTH_SHORT).show();
+            mHandler.sendEmptyMessage(NETWORK_ERROR);
             onRestart();
             return;
         }

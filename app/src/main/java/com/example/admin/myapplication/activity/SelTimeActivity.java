@@ -49,7 +49,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-
+/**
+ * Created by goghox on 11/7/17.
+ */
 public class SelTimeActivity extends AppCompatActivity implements View.OnClickListener {
     private static final int PAY_FOR_ERROR = 1;
     private static final int PAY_FOR_SUCCESS = 2;
@@ -68,7 +70,7 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
     private String mOrdersId;
     private OrderBean mCurrentOrder;
 
-    private Handler handler = new Handler(new Handler.Callback() {
+    private Handler mHandler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
             switch (msg.what) {
@@ -104,9 +106,6 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
 
         NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
         style.setBigContentTitle("PIN of pick up food");
-        /*style.addLine("You pick up food time is: ").
-                addLine("2017.10.24 10:15").
-                addLine("Thank you for you using our produce");*/
 
         android.support.v4.app.NotificationCompat.Builder nb = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.icon_cart)   // must have small icon
@@ -191,7 +190,7 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
         }
         // TODO parse finish, should update the view
         if (scheduleList.size() > 0) {
-            handler.sendEmptyMessage(UPDATE_VIEW);
+            mHandler.sendEmptyMessage(UPDATE_VIEW);
         } else {
             Toast.makeText(this, "get data error, please try repeat.", Toast.LENGTH_SHORT).show();
         }
@@ -237,65 +236,64 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
             @Override
             public void run() {
                 try {
-                    Log.i(TAG, "requireServerToPayFor: combo_id = " + mComboId + "; pickup_time = " + comboTime);
-
-                    String bodyJson = "{\"combo_id\": "+mComboId+", \"pickup_time\": \""+comboTime+"\"}";
+                    String bodyJson = "{\"combo_id\": " + mComboId + ", \"pickup_time\": \"" + comboTime + "\"}";
                     RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), bodyJson);
 
                     Request request = new Request.Builder()
                             .addHeader("content-type", "application/json;charset:utf-8")
                             .post(requestBody)
-                            //.url(AppConstant.SERVER_ORDER_URL + "?combo_id="+mComboId+"&pickup_time="+comboTime)
                             .url(AppConstant.SERVER_ORDER_URL)
                             .build();
-
                     Response response = okHttpClient.newCall(request).execute();
-                    String result = response.body().string();
-                    Log.i(TAG, "onResponse: " + result);
-                    if(result != null) {
-                        JSONObject resObj = new JSONObject(result);
-                        mOrdersId = resObj.getString("orders_id");
 
-                        if(mOrdersId != null && !mOrdersId.isEmpty()) {
-                            // pay for success.
-                            // save the order id to native
-                            // TODO don't test
-                            FileOutputStream fos = getApplication().openFileOutput(AppConstant.USER_ORDERS, MODE_APPEND);
-                            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-                            bw.write(mOrdersId);
-                            bw.newLine();
-                            bw.close();
-                            fos.close();
-
-                            // get the order info via order_id
-                            Net.getInstance().get(AppConstant.SERVER_ORDER_URL + "/" + mOrdersId, new Callback() {
-                                @Override
-                                public void onFailure(Call call, IOException e) {
-                                    handler.sendEmptyMessage(PAY_FOR_ERROR);
-                                }
-                                @Override
-                                public void onResponse(Call call, Response response) throws IOException {
-                                    String orderJson = response.body().string();
-                                    Log.i(TAG, "onResponse: " + orderJson);
-                                    mCurrentOrder = new OrderBean(orderJson);
-                                    handler.sendEmptyMessage(PAY_FOR_SUCCESS);
-                                }
-                            });
-                        }else {
-                            handler.sendEmptyMessage(PAY_FOR_ERROR);
-                        }
+                    if (response.code() > 400) {
+                        mHandler.sendEmptyMessage(PAY_FOR_ERROR);
+                        return;
                     }
-                    // parse result(json)
+                    String result = response.body().string();
+                    Log.i(TAG, "onResponse: ordering a combo = " + result);
+
+                    mCurrentOrder = new OrderBean();
+                    mCurrentOrder.setData(result, OrderBean.FIRSET_REQUEST);
+
+                    mOrdersId = mCurrentOrder.ordersId;
+                    if (mOrdersId == null || mOrdersId.isEmpty()) {
+                        mHandler.sendEmptyMessage(PAY_FOR_ERROR);
+                        return;
+                    }
+
+                    // pay for success.
+                    // save the order id to native
+                    FileOutputStream fos = getApplication().openFileOutput(AppConstant.USER_ORDERS, MODE_APPEND);
+                    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+                    bw.write(mCurrentOrder.ordersId);
+                    bw.newLine();
+                    bw.write(mCurrentOrder.token);
+                    bw.newLine();
+                    bw.close();
+                    fos.close();
+
+                    Request request2 = new Request.Builder()
+                            .url(AppConstant.SERVER_ORDER_URL + "/" + mCurrentOrder.ordersId)
+                            .get()
+                            .addHeader("token", "" + mCurrentOrder.token)
+                            .build();
+                    Response res = Net.getOkHttpClient().newCall(request2).execute();
+                    if(res.code() > 400){
+                        mHandler.sendEmptyMessage(PAY_FOR_ERROR);
+                        return;
+
+                    }
+                    String resJson = res.body().source().readUtf8();
+                    mCurrentOrder.setData(resJson, OrderBean.SENCOND_REQUEST);
+                    mHandler.sendEmptyMessage(PAY_FOR_SUCCESS);
+
 
                 } catch (IOException e) {
                     e.printStackTrace();
-                    handler.sendEmptyMessage(PAY_FOR_ERROR);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    handler.sendEmptyMessage(PAY_FOR_ERROR);
+                    mHandler.sendEmptyMessage(PAY_FOR_ERROR);
                 }
             }
         }).start();
-
     }
 }

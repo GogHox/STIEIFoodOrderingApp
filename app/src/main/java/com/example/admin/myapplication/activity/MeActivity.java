@@ -1,11 +1,10 @@
 package com.example.admin.myapplication.activity;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -14,7 +13,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -25,14 +23,12 @@ import com.example.admin.myapplication.utils.Net;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import okhttp3.Call;
-import okhttp3.Callback;
+import okhttp3.Request;
 import okhttp3.Response;
 
 /**
@@ -45,12 +41,20 @@ public class MeActivity extends AppCompatActivity {
     private ArrayList<OrderBean> orderList = new ArrayList<>();
     private int orderNum = 0;
 
-    private final int UPDATE_VIEW = 0;
+    private static final int UPDATE_VIEW = 0;
+    private static final int NETWORK_ERROR = 1;
     private Handler mHandler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message message) {
             switch (message.what){
                 case UPDATE_VIEW:
+                    if(orderList.size() <= 0){
+                        tvNoDataHint.setVisibility(View.VISIBLE);
+                    }else{
+                        tvNoDataHint.setVisibility(View.INVISIBLE);
+                    }
+                    break;
+                case NETWORK_ERROR:
                     break;
             }
             return false;
@@ -69,21 +73,18 @@ public class MeActivity extends AppCompatActivity {
     }
 
     private void initData() {
-        getOrdersFromServer();
-        //getData();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                getOrdersFromServer();
+            }
+        }).start();
         initList();
     }
 
     private void initList() {
-        //SystemClock.sleep(500);
         OrderAdapter adapter = new OrderAdapter(this, R.layout.item_order, orderList);
         lvOrder.setAdapter(adapter);
-
-        if(orderList.size() <= 0){
-            tvNoDataHint.setVisibility(View.VISIBLE);
-        }else{
-            tvNoDataHint.setVisibility(View.INVISIBLE);
-        }
     }
 
     private void initView() {
@@ -101,33 +102,40 @@ public class MeActivity extends AppCompatActivity {
 
             String orderId;
             while((orderId = br.readLine()) != null){
-                Log.i(TAG, "getOrdersFromServer: " + orderId);
+                if(orderId.isEmpty())
+                    break;
+
+                String token = br.readLine();
+                Log.i(TAG, ": " + orderId);
                 orderNum++;
                 // 2. request server to get the order information.
-                Net.getInstance().get(AppConstant.SERVER_ORDER_URL + "/" + orderId, new Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
+                Request request = new Request.Builder()
+                        .url(AppConstant.SERVER_ORDER_URL + "/" + orderId)
+                        .get()
+                        .addHeader("token", token)
+                        .build();
 
-                    }
+                Response response = Net.getOkHttpClient().newCall(request).execute();
+                if(response.code() > 400) {
+                    mHandler.sendEmptyMessage(NETWORK_ERROR);
+                    return;
+                }
 
-                    @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-
-                        // add the bean obj to list
-                        String resJson = response.body().string();
-                        OrderBean bean = new OrderBean(resJson);
-                        orderList.add(bean);
-
-                        // TODO have a problem, when should let the ListView update view.
-                        //mHandler.sendEmptyMessage(UPDATE_VIEW);
-                    }
-                });
+                // add the bean obj to list
+                String resJson = response.body().source().readUtf8();
+                OrderBean bean = new OrderBean(orderId);
+                bean.setData(resJson, OrderBean.SENCOND_REQUEST);
+                orderList.add(bean);
             }
+
+            mHandler.sendEmptyMessage(UPDATE_VIEW);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             try {
-                fis.close();
+                if(fis != null) {
+                    fis.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -135,26 +143,10 @@ public class MeActivity extends AppCompatActivity {
         return ;
     }
 
-    public void getData() {
-        for(int i = 0; i < 40; i++){
-            OrderBean orderBean = new OrderBean();
-            orderBean.id = "f;sajfal" + i;
-            orderBean.PIN = 1234 + i;
-            orderBean.lockerNumber = 12 + i;
-            orderBean.served = 0;
-            orderBean.pickupTime = "12:30";
-            orderBean.comboId = 1 + i;
-
-            orderList.add(orderBean);
-        }
-    }
-
     class OrderAdapter extends ArrayAdapter<OrderBean>{
-
         public OrderAdapter(@NonNull Context context, int resource) {
             super(context, resource);
         }
-
         public OrderAdapter(@NonNull Context context, int resource, @NonNull List<OrderBean> objects) {
             super(context, resource, objects);
         }
@@ -163,7 +155,6 @@ public class MeActivity extends AppCompatActivity {
         @NonNull
         @Override
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-
             if(convertView == null){
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_order, parent, false);
                 holder = new ViewHolder();
@@ -172,32 +163,37 @@ public class MeActivity extends AppCompatActivity {
                 holder.tvComboStatus = convertView.findViewById(R.id.tv_order_status);
                 holder.tvOrderId = convertView.findViewById(R.id.tv_order_id);
                 holder.tvPickupTime = convertView.findViewById(R.id.tv_pickup_time);
-                holder.tvMoneyValue = convertView.findViewById(R.id.tv_money_value);
+                holder.tvLockerNumber = convertView.findViewById(R.id.tv_locker_number);
                 holder.tvPIN = convertView.findViewById(R.id.tv_pin);
                 convertView.setTag(holder);
-
             }else{
                 holder = (ViewHolder) convertView.getTag();
             }
 
-
             OrderBean bean = orderList.get(position);
-            holder.tvComboName.setText("" + bean.comboId);
-            holder.tvComboStatus.setText("" + bean.served);
-            holder.tvOrderId.setText("" + bean.id);
-            holder.tvPickupTime.setText("" +bean.pickupTime);
-            //tvMoneyValue.setText(bean.served);
-            holder.tvPIN.setText("" +bean.PIN);
+            holder.tvComboName.setText("Combo ID: " + bean.comboId);
+            if(bean.served == 0){
+                holder.tvComboStatus.setText("unfinished");
+                holder.tvComboStatus.setTextColor(Color.RED);
+            }else{
+                holder.tvComboStatus.setText("finished");
+                holder.tvComboStatus.setTextColor(Color.BLUE);
+            }
+
+
+            holder.tvOrderId.setText("Order id: " + bean.id);
+            holder.tvPickupTime.setText("Pickup time: " +bean.pickupTime);
+            holder.tvLockerNumber.setText("Locker number: " + bean.lockerNumber);
+            holder.tvPIN.setText("PIN: " +bean.PIN);
 
             return convertView;
-            //return super.getView(position, convertView, parent);
         }
         class ViewHolder {
             TextView tvComboName;
             TextView tvComboStatus;
             TextView tvOrderId;
             TextView tvPickupTime;
-            TextView tvMoneyValue;
+            TextView tvLockerNumber;
             TextView tvPIN;
         }
     }

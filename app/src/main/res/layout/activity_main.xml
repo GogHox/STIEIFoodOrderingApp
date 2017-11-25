@@ -64,7 +64,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
-                        android:text="RMB  ￥12"
+                        android:text="RMB  ￥00"
                         android:textColor="#151414"
                         android:textSize="25sp" />
                     <!-- description of the string of combo 1-->
@@ -74,12 +74,7 @@
                         android:layout_height="match_parent"
                         android:layout_marginTop="10dp"
                         android:padding="4dp"
-                        android:text="Combo 1:
-
-- tofu
-- rice
-- vegetables
-"
+                        android:text=""
                         android:textColor="#e4290c"
                         android:textSize="20sp" />
                 </LinearLayout>
@@ -128,7 +123,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
-                        android:text="RMB  ￥18"
+                        android:text="RMB  ￥00"
                         android:textColor="#151414"
                         android:textSize="25sp" />
                     <!-- description -->
@@ -138,11 +133,7 @@
                         android:layout_height="match_parent"
                         android:layout_marginTop="10dp"
                         android:padding="4dp"
-                        android:text="Combo 2:
-
-- chicken
-- rice
-- vegetables"
+                        android:text=""
                         android:textColor="#e4290c"
                         android:textSize="20sp" />
                 </LinearLayout>
@@ -192,7 +183,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
-                        android:text="RMB  ￥20"
+                        android:text="RMB  ￥00"
                         android:textColor="#151414"
                         android:textSize="25sp" />
                     <!-- description -->
@@ -203,13 +194,7 @@
                         android:layout_height="match_parent"
                         android:layout_marginTop="10dp"
                         android:padding="4dp"
-                        android:text="Combo 3:
-
-- beef
-- rice
-- corn
-
-          "
+                        android:text=""
                         android:textColor="#e4290c"
                         android:textSize="20sp" />
 

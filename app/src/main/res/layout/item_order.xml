@@ -119,18 +119,20 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
+<!--
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom"
                     android:layout_weight="0"
-                    android:textColor="#ffff621d"
+                    android:textColor="#ccc"
                     android:textSize="17sp"
-                    tools:text="money: " />
+                    tools:text="Locker number: " />
 
+-->
                 <TextView
-                    android:id="@+id/tv_money_value"
+                    android:id="@+id/tv_locker_number"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom"
@@ -138,9 +140,9 @@
                     android:layout_weight="1"
                     android:ellipsize="end"
                     android:singleLine="true"
-                    android:textColor="#ffa2a2a2"
-                    android:textSize="12sp"
-                    tools:text="￥10" />
+                    android:textColor="#616161"
+                    android:textSize="17sp"
+                    tools:text="333" />
 
                 <TextView
                     android:id="@+id/tv_pin"

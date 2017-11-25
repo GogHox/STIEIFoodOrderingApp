@@ -1,11 +1,14 @@
 package com.example.admin.myapplication.activity;
 
-        import android.content.Intent;
-        import android.os.Handler;
-        import android.support.v7.app.AppCompatActivity;
-        import android.os.Bundle;
+import android.content.Intent;
+import android.os.Handler;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import com.example.admin.myapplication.R;
 
-        import com.example.admin.myapplication.R;
+/**
+ * Created by goghox on 11/7/17.
+ */
 
 public class StartActivity extends AppCompatActivity {
 
