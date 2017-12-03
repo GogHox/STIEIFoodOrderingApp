@@ -23,6 +23,7 @@ public class AppConstant {
     public static final String SERVER_COMBO_URL = SERVER_URL + "/combo";
     public static final String SERVER_SCHEDULE_URL = SERVER_URL + "/timeschedule";
     public static final String SERVER_ORDER_URL = SERVER_URL + "/order";
+    public static final String SERVER_COMBO_INGREDIENT_URL = SERVER_URL + "/combo/ingredient";
 
     // ---------------- SharedPreferences
     public static final String USER_ORDERS = "USER_ORDERS";

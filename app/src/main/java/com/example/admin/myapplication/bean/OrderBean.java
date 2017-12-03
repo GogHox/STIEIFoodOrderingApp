@@ -54,7 +54,7 @@ public class OrderBean {
                     this.pickupTime = jo.getString("pickup_time");
                     this.served = jo.getInt("served");
                     this.lockerNumber = jo.getInt("locker_nr");
-                    this.PIN = jo.getInt("pin");
+                    this.PIN = jo.getInt("PIN");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

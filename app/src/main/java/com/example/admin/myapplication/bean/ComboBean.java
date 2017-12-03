@@ -35,4 +35,15 @@ public class ComboBean {
             e.printStackTrace();
         }
     }
+
+    public void setComboDesc(String[] ingredient) {
+
+        this.description = "" + this.name + ": ";
+        for(int i = 0; i < ingredient.length; i++) {
+            if(i != 0) {
+                description += ", ";
+            }
+            description += ingredient[i];
+        }
+    }
 }

@@ -31,6 +31,7 @@ import java.util.ArrayList;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Request;
 import okhttp3.Response;
 /**
  * Created by goghox on 11/7/17.
@@ -112,8 +113,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         * server request to show the provided food portfolio
         * */
     private void requestServerToGetInformation() {
-        Net net = Net.getInstance();
-        net.get(AppConstant.SERVER_COMBO_URL, new Callback() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Request request = new Request.Builder()
+                        .url(AppConstant.SERVER_COMBO_URL)
+                        .get()
+                        .build();
+                try {
+                    Response response = Net.getOkHttpClient().newCall(request).execute();
+                    if(response.code() == 200){
+                        String jsonStr = response.body().string();
+                        Log.i(TAG, "onResponse: --------------------------------" + jsonStr);
+                        parseJsonAndUpdateView(jsonStr.trim());
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+       /* net.get(AppConstant.SERVER_COMBO_URL, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 mHandler.sendEmptyMessage(NETWORK_ERROR);
@@ -129,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mHandler.sendEmptyMessage(NETWORK_ERROR);
                 }
             }
-        });
+        });*/
     }
 
     // This function run in child thread.
@@ -140,8 +160,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 JSONObject comboItemObj = comboArr.getJSONObject(i);
                 ComboBean comboBean = new ComboBean(comboItemObj);
                 comboList.add(comboBean);
+                // get the combo ingredient from server
+                Request request = new Request.Builder()
+                        .url(AppConstant.SERVER_COMBO_INGREDIENT_URL + "/" + comboBean.id)
+                        .get()
+                        .build();
+                Response response = Net.getOkHttpClient().newCall(request).execute();
+                String ingredientJson = response.body().source().readUtf8();
+                JSONArray ja = new JSONArray(ingredientJson);
+                String []comboIngredient = new String[ja.length()];
+                for (int j = 0; j < ja.length(); j++) {
+                    JSONObject jo = ja.getJSONObject(j);
+                    comboIngredient[j] = jo.getString("name");
+                }
+                comboList.get(i).setComboDesc(comboIngredient);
             }
         } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
         if (comboList.size() >= 0){
