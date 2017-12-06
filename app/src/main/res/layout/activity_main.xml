@@ -85,7 +85,7 @@
                     android:layout_width="120dp"
                     android:layout_height="match_parent"
                     android:padding="10dp"
-                    android:src="@drawable/food1l" />
+                    android:src="@drawable/default_pic" />
 
 
             </LinearLayout>
@@ -144,7 +144,7 @@
                     android:layout_width="120dp"
                     android:layout_height="match_parent"
                     android:padding="10dp"
-                    android:src="@drawable/food2l" />
+                    android:src="@drawable/default_pic" />
 
 
             </LinearLayout>
@@ -207,7 +207,7 @@
                     android:layout_width="120dp"
                     android:layout_height="match_parent"
                    android:padding="10dp"
-                    android:src="@drawable/food3l" />
+                    android:src="@drawable/default_pic" />
 
 
             </LinearLayout>

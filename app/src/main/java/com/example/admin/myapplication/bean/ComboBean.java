@@ -11,7 +11,7 @@ public class ComboBean {
     public String name;
     public int id;
     public double money;
-
+    public String photo;
     public int combo_available;
     public String description;
     public String picture;
@@ -30,6 +30,7 @@ public class ComboBean {
             this.name = comboItemObj.getString("name");
             this.money = comboItemObj.getDouble("price");
             this.combo_available = comboItemObj.getInt("combo_available");
+            this.photo = comboItemObj.getString("photo");
             this.description = "Combo Name: " + name;
         } catch (JSONException e) {
             e.printStackTrace();

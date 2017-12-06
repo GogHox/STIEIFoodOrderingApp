@@ -1,11 +1,14 @@
 package com.example.admin.myapplication.activity;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -80,11 +83,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 comboLayoutList.get(i).setClickable(false);
                 comboLayoutList.get(i).setBackgroundColor(Color.GRAY);
             }
-            if(comboBean.picture != null){
+            /*if(comboBean.picture != null){
                 Glide.with(this)
                         .load(comboBean.picture)
                         .into(comboShowPicViewList.get(i));
-
+            }*/
+            if(!comboBean.photo.isEmpty()) {
+                byte[] base64Pic = Base64.decode(comboBean.photo, 1);
+                Bitmap bitmap = BitmapFactory.decodeByteArray(base64Pic, 0, base64Pic.length);
+                comboShowPicViewList.get(i).setImageBitmap(bitmap);
             }
         }
     }
@@ -132,24 +139,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         }).start();
-
-       /* net.get(AppConstant.SERVER_COMBO_URL, new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                mHandler.sendEmptyMessage(NETWORK_ERROR);
-            }
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if(response.code() == 200) {
-                    // get the JSON from responses.
-                    String jsonStr = response.body().string();
-                    Log.i(TAG, "onResponse: --------------------------------" + jsonStr);
-                    parseJsonAndUpdateView(jsonStr.trim());
-                }else {
-                    mHandler.sendEmptyMessage(NETWORK_ERROR);
-                }
-            }
-        });*/
     }
 
     // This function run in child thread.
