@@ -1,26 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <FrameLayout
+
+    <TextView
+        android:id="@+id/textView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="60dp"
+        android:background="@color/colorPrimary"
+        android:gravity="center"
+        android:text="The combo list of you ordered"
+        android:textColor="#fff"
+        android:textSize="24sp" />
 
-        <ListView
-            android:id="@+id/lv_order"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-        <TextView
-            android:id="@+id/tv_no_data_hint"
-            android:gravity="center"
-            android:textSize="28sp"
-            android:visibility="invisible"
-            android:text="You don't have order.\n\nPlease place an order in main page."
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </FrameLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-</RelativeLayout>
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/tv_no_data_hint"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+                android:text="don't have more order."
+                android:textColor="#333"
+                android:layout_marginTop="10dp"
+                android:textSize="18sp"
+                android:visibility="invisible" />
+
+            
+            <ListView
+                android:id="@+id/lv_order"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:overScrollMode="always"
+                android:smoothScrollbar="true" />
+        </FrameLayout>
+
+    </RelativeLayout>
+</LinearLayout>

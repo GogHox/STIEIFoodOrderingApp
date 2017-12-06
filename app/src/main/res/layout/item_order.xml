@@ -32,10 +32,7 @@
                     android:id="@+id/good_icon"
                     android:layout_width="98.0dp"
                     android:layout_height="98dp"
-                    android:layerType="software"
-                    android:scaleType="centerCrop"
                     android:src="@drawable/bmob_update_close_bg_normal"/>
-
             </FrameLayout>
             
 

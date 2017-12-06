@@ -14,18 +14,10 @@ public class ComboBean {
     public String photo;
     public int combo_available;
     public String description;
-    public String picture;
 
     public ComboBean(){}
     public ComboBean(JSONObject comboItemObj){
         try {
-            /* //old api
-            this.name = comboItemObj.getString("name");
-            this.money = comboItemObj.getDouble("money");
-            this.status = comboItemObj.getInt("status");
-            this.description = comboItemObj.getString("description");
-            this.picture = comboItemObj.getString("picture");
-            */
             this.id = comboItemObj.getInt("id");
             this.name = comboItemObj.getString("name");
             this.money = comboItemObj.getDouble("price");

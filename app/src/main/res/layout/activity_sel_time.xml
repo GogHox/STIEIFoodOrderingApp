@@ -9,13 +9,12 @@
     <TextView
         android:id="@+id/textView"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="60dp"
         android:background="@color/colorPrimary"
         android:gravity="center"
-        android:padding="10dp"
         android:text="Please schedule your  pick up time"
         android:textColor="#fff"
-        android:textSize="20sp" />
+        android:textSize="24sp" />
 
     <!--Food customer can schedule his food pick up time at the locker-->
 

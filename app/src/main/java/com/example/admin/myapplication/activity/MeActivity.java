@@ -1,6 +1,8 @@
 package com.example.admin.myapplication.activity;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -8,18 +10,25 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.admin.myapplication.AppConstant;
 import com.example.admin.myapplication.R;
+import com.example.admin.myapplication.bean.ComboBean;
 import com.example.admin.myapplication.bean.OrderBean;
 import com.example.admin.myapplication.utils.Net;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -39,10 +48,15 @@ public class MeActivity extends AppCompatActivity {
 
     private ListView lvOrder;
     private ArrayList<OrderBean> orderList = new ArrayList<>();
+    private ArrayList<ComboBean> comboMsgList = new ArrayList<>();
     private int orderNum = 0;
 
     private static final int UPDATE_VIEW = 0;
     private static final int NETWORK_ERROR = 1;
+    private TextView tvNoDataHint;
+    private String TAG = "MeActivity";
+    private OrderAdapter mAdapter;
+
     private Handler mHandler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message message) {
@@ -50,9 +64,12 @@ public class MeActivity extends AppCompatActivity {
                 case UPDATE_VIEW:
                     if(orderList.size() <= 0){
                         tvNoDataHint.setVisibility(View.VISIBLE);
+                        lvOrder.setVisibility(View.GONE);
                     }else{
                         tvNoDataHint.setVisibility(View.INVISIBLE);
+                        lvOrder.setVisibility(View.VISIBLE);
                     }
+                    mAdapter.notifyDataSetChanged();
                     break;
                 case NETWORK_ERROR:
                     break;
@@ -60,8 +77,6 @@ public class MeActivity extends AppCompatActivity {
             return false;
         }
     });
-    private TextView tvNoDataHint;
-    private String TAG = "MeActivity";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -73,23 +88,47 @@ public class MeActivity extends AppCompatActivity {
     }
 
     private void initData() {
+        mAdapter = new OrderAdapter(this, R.layout.item_order, orderList);
+        lvOrder.setAdapter(mAdapter);
+
+        // get data of ListView from server.
         new Thread(new Runnable() {
             @Override
             public void run() {
+                getComboMsgFromServer();
                 getOrdersFromServer();
             }
         }).start();
-        initList();
     }
 
-    private void initList() {
-        OrderAdapter adapter = new OrderAdapter(this, R.layout.item_order, orderList);
-        lvOrder.setAdapter(adapter);
+    private void getComboMsgFromServer() {
+
+        try {
+            Request request = new Request.Builder().url(AppConstant.SERVER_COMBO_URL).get().build();
+            Response response = Net.getOkHttpClient().newCall(request).execute();
+            if(response.code() > 400) {
+                mHandler.sendEmptyMessage(NETWORK_ERROR);
+            }
+            String comboMsgJson = response.body().source().readUtf8();
+            JSONArray ja = new JSONArray(comboMsgJson);
+            for(int i = 0; i < ja.length(); i++) {
+                JSONObject jo = ja.getJSONObject(i);
+                ComboBean bean = new ComboBean(jo);
+                comboMsgList.add(bean);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     private void initView() {
         tvNoDataHint = (TextView) findViewById(R.id.tv_no_data_hint);
         lvOrder = (ListView) findViewById(R.id.lv_order);
+
+        tvNoDataHint.setVisibility(View.VISIBLE);
+        lvOrder.setVisibility(View.GONE);
     }
 
     public void getOrdersFromServer() {
@@ -97,10 +136,9 @@ public class MeActivity extends AppCompatActivity {
         try {
             // 1. get the order id from native file
             fis = getApplication().openFileInput(AppConstant.USER_ORDERS);
-
             BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-
             String orderId;
+
             while((orderId = br.readLine()) != null){
                 if(orderId.isEmpty())
                     break;
@@ -165,6 +203,7 @@ public class MeActivity extends AppCompatActivity {
                 holder.tvPickupTime = convertView.findViewById(R.id.tv_pickup_time);
                 holder.tvLockerNumber = convertView.findViewById(R.id.tv_locker_number);
                 holder.tvPIN = convertView.findViewById(R.id.tv_pin);
+                holder.ivIcon = convertView.findViewById(R.id.good_icon);
                 convertView.setTag(holder);
             }else{
                 holder = (ViewHolder) convertView.getTag();
@@ -179,12 +218,17 @@ public class MeActivity extends AppCompatActivity {
                 holder.tvComboStatus.setText("finished");
                 holder.tvComboStatus.setTextColor(Color.BLUE);
             }
-
+            if(comboMsgList.size() > 0) {
+                byte[] base64Pic = Base64.decode(comboMsgList.get(bean.comboId - 1).photo, 0);
+                Bitmap bitmap = BitmapFactory.decodeByteArray(base64Pic, 0, base64Pic.length);
+                holder.ivIcon.setImageBitmap(bitmap);
+            }
 
             holder.tvOrderId.setText("Order id: " + bean.id);
             holder.tvPickupTime.setText("Pickup time: " +bean.pickupTime);
             holder.tvLockerNumber.setText("Locker number: " + bean.lockerNumber);
             holder.tvPIN.setText("PIN: " +bean.PIN);
+
 
             return convertView;
         }
@@ -195,6 +239,7 @@ public class MeActivity extends AppCompatActivity {
             TextView tvPickupTime;
             TextView tvLockerNumber;
             TextView tvPIN;
+            ImageView ivIcon;
         }
     }
 }
