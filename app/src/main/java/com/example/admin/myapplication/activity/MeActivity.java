@@ -7,8 +7,10 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
@@ -19,6 +21,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.admin.myapplication.AppConstant;
 import com.example.admin.myapplication.R;
@@ -47,15 +50,17 @@ import okhttp3.Response;
 public class MeActivity extends AppCompatActivity {
 
     private ListView lvOrder;
+    private TextView tvNoDataHint;
+    private SwipeRefreshLayout srl;
     private ArrayList<OrderBean> orderList = new ArrayList<>();
     private ArrayList<ComboBean> comboMsgList = new ArrayList<>();
     private int orderNum = 0;
-
     private static final int UPDATE_VIEW = 0;
     private static final int NETWORK_ERROR = 1;
-    private TextView tvNoDataHint;
     private String TAG = "MeActivity";
     private OrderAdapter mAdapter;
+    private long mTempStartTime = 0;
+    private long mTempEndTime = 0;
 
     private Handler mHandler = new Handler(new Handler.Callback() {
         @Override
@@ -70,8 +75,10 @@ public class MeActivity extends AppCompatActivity {
                         lvOrder.setVisibility(View.VISIBLE);
                     }
                     mAdapter.notifyDataSetChanged();
+                    mTempEndTime = SystemClock.currentThreadTimeMillis();
                     break;
                 case NETWORK_ERROR:
+                    Toast.makeText(getBaseContext(), "Network error, please retry.", Toast.LENGTH_LONG).show();
                     break;
             }
             return false;
@@ -90,7 +97,33 @@ public class MeActivity extends AppCompatActivity {
     private void initData() {
         mAdapter = new OrderAdapter(this, R.layout.item_order, orderList);
         lvOrder.setAdapter(mAdapter);
-
+        srl.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mTempStartTime = SystemClock.currentThreadTimeMillis();
+                        getOrdersFromServer();
+                        if(mTempStartTime - mTempEndTime < 1500) {
+                            mHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    srl.setRefreshing(false);
+                                }
+                            }, 1000);
+                        }else{
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    srl.setRefreshing(false);
+                                }
+                            });
+                        }
+                    }
+                }).start();
+            }
+        });
         // get data of ListView from server.
         new Thread(new Runnable() {
             @Override
@@ -102,7 +135,6 @@ public class MeActivity extends AppCompatActivity {
     }
 
     private void getComboMsgFromServer() {
-
         try {
             Request request = new Request.Builder().url(AppConstant.SERVER_COMBO_URL).get().build();
             Response response = Net.getOkHttpClient().newCall(request).execute();
@@ -126,7 +158,9 @@ public class MeActivity extends AppCompatActivity {
     private void initView() {
         tvNoDataHint = (TextView) findViewById(R.id.tv_no_data_hint);
         lvOrder = (ListView) findViewById(R.id.lv_order);
+        srl = (SwipeRefreshLayout) findViewById(R.id.srl);
 
+        srl.setColorSchemeResources(R.color.colorAccent);
         tvNoDataHint.setVisibility(View.VISIBLE);
         lvOrder.setVisibility(View.GONE);
     }
@@ -139,6 +173,8 @@ public class MeActivity extends AppCompatActivity {
             BufferedReader br = new BufferedReader(new InputStreamReader(fis));
             String orderId;
 
+            // first, clear the order list.
+            orderList.clear();
             while((orderId = br.readLine()) != null){
                 if(orderId.isEmpty())
                     break;
