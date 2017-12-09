@@ -191,15 +191,18 @@ public class MeActivity extends AppCompatActivity {
 
                 Response response = Net.getOkHttpClient().newCall(request).execute();
                 if(response.code() > 400) {
-                    mHandler.sendEmptyMessage(NETWORK_ERROR);
-                    return;
+                    continue;
                 }
 
                 // add the bean obj to list
                 String resJson = response.body().source().readUtf8();
                 OrderBean bean = new OrderBean(orderId);
                 bean.setData(resJson, OrderBean.SENCOND_REQUEST);
-                orderList.add(bean);
+                if(bean.comboId > 0) {
+                    orderList.add(bean);
+                }else {
+                    // TODO delete the order item in local.
+                }
             }
 
             mHandler.sendEmptyMessage(UPDATE_VIEW);
@@ -218,6 +221,7 @@ public class MeActivity extends AppCompatActivity {
     }
 
     class OrderAdapter extends ArrayAdapter<OrderBean>{
+
         public OrderAdapter(@NonNull Context context, int resource) {
             super(context, resource);
         }
@@ -225,6 +229,7 @@ public class MeActivity extends AppCompatActivity {
             super(context, resource, objects);
         }
 
+        private boolean haveFinishItem = false;
         ViewHolder holder;
         @NonNull
         @Override
@@ -240,6 +245,7 @@ public class MeActivity extends AppCompatActivity {
                 holder.tvLockerNumber = convertView.findViewById(R.id.tv_locker_number);
                 holder.tvPIN = convertView.findViewById(R.id.tv_pin);
                 holder.ivIcon = convertView.findViewById(R.id.good_icon);
+                holder.tvInformation = convertView.findViewById(R.id.tv_information);
                 convertView.setTag(holder);
             }else{
                 holder = (ViewHolder) convertView.getTag();
@@ -248,23 +254,28 @@ public class MeActivity extends AppCompatActivity {
             OrderBean bean = orderList.get(position);
             holder.tvComboName.setText("Combo ID: " + bean.comboId);
             if(bean.served == 0){
-                holder.tvComboStatus.setText("unfinished");
+                // finish?
+                holder.tvComboStatus.setText("unseved");
                 holder.tvComboStatus.setTextColor(Color.RED);
+
+                holder.tvPIN.setVisibility(View.GONE);
+                holder.tvInformation.setText("You'll receive your PIN, when your order is served.");
             }else{
-                holder.tvComboStatus.setText("finished");
+                holder.tvComboStatus.setText("served");
                 holder.tvComboStatus.setTextColor(Color.BLUE);
+
+                holder.tvInformation.setText("Please type the PIN in to the locker.");
             }
-            if(comboMsgList.size() > 0) {
+            if(comboMsgList.size() > 0 && bean.comboId > 0) {
                 byte[] base64Pic = Base64.decode(comboMsgList.get(bean.comboId - 1).photo, 0);
                 Bitmap bitmap = BitmapFactory.decodeByteArray(base64Pic, 0, base64Pic.length);
                 holder.ivIcon.setImageBitmap(bitmap);
             }
 
             holder.tvOrderId.setText("Order id: " + bean.id);
-            holder.tvPickupTime.setText("Pickup time: " +bean.pickupTime);
+            holder.tvPickupTime.setText("Pickup time: " + bean.pickupTime);
             holder.tvLockerNumber.setText("Locker number: " + bean.lockerNumber);
-            holder.tvPIN.setText("PIN: " +bean.PIN);
-
+            holder.tvPIN.setText("PIN: " + bean.PIN);
 
             return convertView;
         }
@@ -276,6 +287,7 @@ public class MeActivity extends AppCompatActivity {
             TextView tvLockerNumber;
             TextView tvPIN;
             ImageView ivIcon;
+            TextView tvInformation;
         }
     }
 }

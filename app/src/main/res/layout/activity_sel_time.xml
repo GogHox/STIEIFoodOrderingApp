@@ -12,7 +12,7 @@
         android:layout_height="60dp"
         android:background="@color/colorPrimary"
         android:gravity="center"
-        android:text="Please schedule your  pick up time"
+        android:text="Select your pickup time"
         android:textColor="#fff"
         android:textSize="24sp" />
 
@@ -77,6 +77,6 @@
             android:layout_marginRight="15dp"
             android:text="RMB ￥18"
             android:textColor="#fff"
-            android:textSize="30sp" />
+            android:textSize="26sp" />
     </LinearLayout>
 </LinearLayout>

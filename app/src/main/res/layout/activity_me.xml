@@ -11,7 +11,7 @@
         android:layout_height="60dp"
         android:background="@color/colorPrimary"
         android:gravity="center"
-        android:text="The combo list of you ordered"
+        android:text="Your orders"
         android:textColor="#fff"
         android:textSize="24sp" />
 
@@ -29,7 +29,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center_horizontal"
-                android:text="don't have more order."
+                android:text="No orders yet."
                 android:textColor="#333"
                 android:layout_marginTop="10dp"
                 android:textSize="18sp"

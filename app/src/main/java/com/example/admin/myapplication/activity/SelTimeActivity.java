@@ -188,7 +188,7 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        // TODO parse finish, should update the view
+        // update the view
         if (scheduleList.size() > 0) {
             mHandler.sendEmptyMessage(UPDATE_VIEW);
         } else {
