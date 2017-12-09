@@ -16,10 +16,9 @@ public class AppConstant {
 
     public static final int COMBO_1 = 0;
     public static final int COMBO_2 = 1;
-
     public static final int COMBO_3 = 2;
     // ---------------- Server
-    public static final String SERVER_URL = "http://192.168.1.108:8080";
+    public static final String SERVER_URL = "http://192.168.124.132:8080";
     public static final String SERVER_COMBO_URL = SERVER_URL + "/combo";
     public static final String SERVER_SCHEDULE_URL = SERVER_URL + "/timeschedule";
     public static final String SERVER_ORDER_URL = SERVER_URL + "/order";

@@ -1,11 +1,13 @@
 package com.example.admin.myapplication.activity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
@@ -36,6 +38,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Request;
 import okhttp3.Response;
+
 /**
  * Created by goghox on 11/7/17.
  */
@@ -74,21 +77,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     });
 
     private void updateView() {
-            for (int i = 0; i < comboList.size(); i++){
-                ComboBean comboBean = comboList.get(i);
-                comboMoneyViewList.get(i).setText("￥ " + comboBean.money);
-                comboDescriptionViewList.get(i).setText("" + comboBean.description);
+        for (int i = 0; i < comboList.size(); i++) {
+            ComboBean comboBean = comboList.get(i);
+            comboMoneyViewList.get(i).setText("￥ " + comboBean.money);
+            comboDescriptionViewList.get(i).setText("" + comboBean.description);
 
-            if(comboBean.combo_available == 0){
+            if (comboBean.combo_available == 0) {
                 comboLayoutList.get(i).setClickable(false);
                 comboLayoutList.get(i).setBackgroundColor(Color.GRAY);
             }
-            /*if(comboBean.picture != null){
-                Glide.with(this)
-                        .load(comboBean.picture)
-                        .into(comboShowPicViewList.get(i));
-            }*/
-            if(!comboBean.photo.isEmpty()) {
+
+            if (!comboBean.photo.isEmpty()) {
                 byte[] base64Pic = Base64.decode(comboBean.photo, 1);
                 Bitmap bitmap = BitmapFactory.decodeByteArray(base64Pic, 0, base64Pic.length);
                 comboShowPicViewList.get(i).setImageBitmap(bitmap);
@@ -129,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         .build();
                 try {
                     Response response = Net.getOkHttpClient().newCall(request).execute();
-                    if(response.code() == 200){
+                    if (response.code() == 200) {
                         String jsonStr = response.body().string();
                         Log.i(TAG, "onResponse: --------------------------------" + jsonStr);
                         parseJsonAndUpdateView(jsonStr.trim());
@@ -145,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void parseJsonAndUpdateView(String json) {
         try {
             JSONArray comboArr = new JSONArray(json);
-            for(int i = 0; i < comboArr.length(); i++){
+            for (int i = 0; i < comboArr.length(); i++) {
                 JSONObject comboItemObj = comboArr.getJSONObject(i);
                 ComboBean comboBean = new ComboBean(comboItemObj);
                 comboList.add(comboBean);
@@ -157,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Response response = Net.getOkHttpClient().newCall(request).execute();
                 String ingredientJson = response.body().source().readUtf8();
                 JSONArray ja = new JSONArray(ingredientJson);
-                String []comboIngredient = new String[ja.length()];
+                String[] comboIngredient = new String[ja.length()];
                 for (int j = 0; j < ja.length(); j++) {
                     JSONObject jo = ja.getJSONObject(j);
                     comboIngredient[j] = jo.getString("name");
@@ -169,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (comboList.size() >= 0){
+        if (comboList.size() >= 0) {
             // information main thread update view
             mHandler.sendEmptyMessage(GET_DATA_SUCCESS);
         }
@@ -223,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         llCombo3.setOnClickListener(this);
 
         /* Me button */
-        ((Button)findViewById(R.id.btn_me)).setOnClickListener(this);
+        ((Button) findViewById(R.id.btn_me)).setOnClickListener(this);
     }
 
     /*switch case for selecting food: current status static
@@ -252,19 +251,58 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 isSelCombo = false;
                 break;
         }
-        if(!isSelCombo)
+        if (!isSelCombo)
             return;
-        // enter next activity
-        Intent intent = new Intent(this, SelTimeActivity.class);
-        if(comboList.size() < selectComboIndex+1){
-            mHandler.sendEmptyMessage(NETWORK_ERROR);
-            onRestart();
-            return;
+
+        // TODO show dialog, if click confirm, enter select time page, else cancel.
+        AlertDialog alertDialog = new AlertDialog.Builder(this)
+                .setTitle("Description")
+                .setPositiveButton("confirm", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // enter next activity
+                        Intent intent = new Intent(getBaseContext(), SelTimeActivity.class);
+                        if (comboList.size() < selectComboIndex + 1) {
+                            mHandler.sendEmptyMessage(NETWORK_ERROR);
+                            onRestart();
+                            return;
+                        }
+                        intent.putExtra(AppConstant.SEL_COMBO_ID_TAG, comboList.get(selectComboIndex).id);
+                        intent.putExtra(AppConstant.SEL_COMBO_NAME_TAG, comboList.get(selectComboIndex).name);
+                        intent.putExtra(AppConstant.SEL_COMBO_MONEY_TAG, comboList.get(selectComboIndex).money);
+                        startActivity(intent);
+                    }
+                })
+                .setNegativeButton("back", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        rbCombo1.setChecked(false);
+                        rbCombo2.setChecked(false);
+                        rbCombo3.setChecked(false);
+                    }
+                })
+                .setView(R.layout.dialog_confirm_combo)
+                .show();
+
+        ComboBean bean = comboList.get(selectComboIndex);
+        byte[] pic = Base64.decode(bean.photo, 0);
+        Bitmap bitmap = BitmapFactory.decodeByteArray(pic, 0, pic.length);
+
+        String ingredient = new String();
+        for(int i = 0; i < bean.ingredient.length; i++){
+            ingredient += bean.ingredient[i] + "\n";
         }
-        intent.putExtra(AppConstant.SEL_COMBO_ID_TAG, comboList.get(selectComboIndex).id);
-        intent.putExtra(AppConstant.SEL_COMBO_NAME_TAG, comboList.get(selectComboIndex).name);
-        intent.putExtra(AppConstant.SEL_COMBO_MONEY_TAG, comboList.get(selectComboIndex).money);
-        startActivity(intent);
+        ((ImageView) alertDialog.findViewById(R.id.iv_pic)).setImageBitmap(bitmap);
+        ((TextView) alertDialog.findViewById(R.id.tv_title)).setText(bean.name + ":");
+        ((TextView) alertDialog.findViewById(R.id.tv_description)).setText(ingredient);
+        ((TextView) alertDialog.findViewById(R.id.tv_money)).setText("￥ " + bean.money);
+
     }
 
 }

@@ -8,12 +8,13 @@ import org.json.JSONObject;
  */
 
 public class ComboBean {
-    public String name;
+    public String name;                 // combo name
     public int id;
     public double money;
-    public String photo;
+    public String photo;                // picture after base64 encode
     public int combo_available;
-    public String description;
+    public String[] ingredient;        // combo ingredient
+    public String description;         // combo description, according to the ingredient and name
 
     public ComboBean(){}
     public ComboBean(JSONObject comboItemObj){
@@ -30,6 +31,7 @@ public class ComboBean {
     }
 
     public void setComboDesc(String[] ingredient) {
+        this.ingredient = ingredient;
 
         this.description = "" + this.name + ": ";
         for(int i = 0; i < ingredient.length; i++) {

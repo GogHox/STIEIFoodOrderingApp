@@ -213,7 +213,7 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
                 return;
             }
             // get the time of selected button via checked radio button
-            RadioButton checkBtn = findViewById(rgSelTime.getCheckedRadioButtonId());
+            RadioButton checkBtn = (RadioButton) findViewById(rgSelTime.getCheckedRadioButtonId());
             requireServerToPayFor(mComboMoney, (String) checkBtn.getText());
 
         }
