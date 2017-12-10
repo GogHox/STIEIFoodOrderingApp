@@ -135,6 +135,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
+                    mHandler.sendEmptyMessage(NETWORK_ERROR);
                 }
             }
         }).start();
@@ -254,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (!isSelCombo)
             return;
 
-        // TODO show dialog, if click confirm, enter select time page, else cancel.
+        // show dialog, if click confirm, enter select time page, else cancel.
         AlertDialog alertDialog = new AlertDialog.Builder(this)
                 .setTitle("Description")
                 .setPositiveButton("confirm", new DialogInterface.OnClickListener() {
@@ -290,18 +291,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setView(R.layout.dialog_confirm_combo)
                 .show();
 
-        ComboBean bean = comboList.get(selectComboIndex);
-        byte[] pic = Base64.decode(bean.photo, 0);
-        Bitmap bitmap = BitmapFactory.decodeByteArray(pic, 0, pic.length);
+        if(comboList.size() > 0) {
+            ComboBean bean = comboList.get(selectComboIndex);
 
-        String ingredient = new String();
-        for(int i = 0; i < bean.ingredient.length; i++){
-            ingredient += bean.ingredient[i] + "\n";
+            String ingredient = new String();
+            if (!bean.photo.isEmpty()) {
+                byte[] pic = Base64.decode(bean.photo, 0);
+                Bitmap bitmap = BitmapFactory.decodeByteArray(pic, 0, pic.length);
+                ((ImageView) alertDialog.findViewById(R.id.iv_pic)).setImageBitmap(bitmap);
+            }
+            for (int i = 0; i < bean.ingredient.length; i++) {
+                ingredient += bean.ingredient[i] + "\n";
+            }
+            ((TextView) alertDialog.findViewById(R.id.tv_title)).setText(bean.name + ":");
+            ((TextView) alertDialog.findViewById(R.id.tv_description)).setText(ingredient);
+            ((TextView) alertDialog.findViewById(R.id.tv_money)).setText("￥ " + bean.money);
         }
-        ((ImageView) alertDialog.findViewById(R.id.iv_pic)).setImageBitmap(bitmap);
-        ((TextView) alertDialog.findViewById(R.id.tv_title)).setText(bean.name + ":");
-        ((TextView) alertDialog.findViewById(R.id.tv_description)).setText(ingredient);
-        ((TextView) alertDialog.findViewById(R.id.tv_money)).setText("￥ " + bean.money);
 
     }
 

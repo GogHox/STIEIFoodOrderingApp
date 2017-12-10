@@ -81,7 +81,8 @@
                         android:padding="4dp"
                         android:text=""
                         android:textColor="#e4290c"
-                        android:textSize="20sp" />
+                        android:ellipsize="end"
+                        android:textSize="16sp" />
                 </LinearLayout>
 
                 <!-- picture representation (combo 1) of the server in a standardized form (defined width and height) -->
@@ -139,7 +140,8 @@
                         android:padding="4dp"
                         android:text=""
                         android:textColor="#e4290c"
-                        android:textSize="20sp" />
+                        android:ellipsize="end"
+                        android:textSize="16sp" />
                 </LinearLayout>
 
                 <!-- picture representation (combo 2) of the server in a standardized form (defined width and height) -->
@@ -199,7 +201,8 @@
                         android:padding="4dp"
                         android:text=""
                         android:textColor="#e4290c"
-                        android:textSize="20sp" />
+                        android:ellipsize="end"
+                        android:textSize="16sp" />
 
 
                 </LinearLayout>

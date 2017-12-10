@@ -2,8 +2,10 @@ package com.example.admin.myapplication.activity;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,6 +26,7 @@ import com.example.admin.myapplication.R;
 import com.example.admin.myapplication.bean.OrderBean;
 import com.example.admin.myapplication.bean.ScheduleBean;
 import com.example.admin.myapplication.utils.Net;
+import com.example.admin.myapplication.utils.OrderDBHelper;
 import com.example.admin.myapplication.view.ScheduleRadioButton;
 
 import org.json.JSONArray;
@@ -264,14 +267,17 @@ public class SelTimeActivity extends AppCompatActivity implements View.OnClickLi
 
                     // pay for success.
                     // save the order id to native
-                    FileOutputStream fos = getApplication().openFileOutput(AppConstant.USER_ORDERS, MODE_APPEND);
+                    OrderDBHelper dbHelper = new OrderDBHelper(getBaseContext());
+                    dbHelper.insertOrder(mCurrentOrder.ordersId, mCurrentOrder.token);
+
+                   /* FileOutputStream fos = getApplication().openFileOutput(AppConstant.USER_ORDERS, MODE_APPEND);
                     BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
                     bw.write(mCurrentOrder.ordersId);
                     bw.newLine();
                     bw.write(mCurrentOrder.token);
                     bw.newLine();
                     bw.close();
-                    fos.close();
+                    fos.close();*/
 
                     Request request2 = new Request.Builder()
                             .url(AppConstant.SERVER_ORDER_URL + "/" + mCurrentOrder.ordersId)

@@ -1,6 +1,7 @@
 package com.example.admin.myapplication.activity;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -28,6 +29,7 @@ import com.example.admin.myapplication.R;
 import com.example.admin.myapplication.bean.ComboBean;
 import com.example.admin.myapplication.bean.OrderBean;
 import com.example.admin.myapplication.utils.Net;
+import com.example.admin.myapplication.utils.OrderDBHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -168,8 +170,48 @@ public class MeActivity extends AppCompatActivity {
     public void getOrdersFromServer() {
         FileInputStream fis = null;
         try {
-            // 1. get the order id from native file
-            fis = getApplication().openFileInput(AppConstant.USER_ORDERS);
+            // 1. get the order id from native database
+            OrderDBHelper dbHelper = new OrderDBHelper(this);
+            Cursor cursor = dbHelper.queryOrder();
+            orderNum = cursor.getCount();
+            if(cursor == null){
+                return;
+            }
+            // first, clear the order list.
+            orderList.clear();
+            while (cursor.moveToNext()) {
+                int id = cursor.getInt(cursor.getColumnIndex("id"));
+                String orderId = cursor.getString(cursor.getColumnIndex("order_id"));
+                String token = cursor.getString(cursor.getColumnIndex("token"));
+
+                // 2. request server to get the order information.
+                Request request = new Request.Builder()
+                        .url(AppConstant.SERVER_ORDER_URL + "/" + orderId)
+                        .get()
+                        .addHeader("token", token)
+                        .build();
+                Response response = Net.getOkHttpClient().newCall(request).execute();
+                if(response.code() > 400) {
+                    continue;
+                }
+
+                if(response.code() == 200) {
+                    // add the bean obj to list
+                    String resJson = response.body().source().readUtf8();
+                    OrderBean bean = new OrderBean(orderId);
+                    bean.setData(resJson, OrderBean.SENCOND_REQUEST);
+                    if (bean.comboId > 0) {
+                        orderList.add(bean);
+                    } else {
+                        // TODO delete the order item in local.
+                        dbHelper.deleteOrder(id);
+                    }
+                }
+            }
+            cursor.close();
+
+            //
+            /*fis = getApplication().openFileInput(AppConstant.USER_ORDERS);
             BufferedReader br = new BufferedReader(new InputStreamReader(fis));
             String orderId;
 
@@ -203,7 +245,7 @@ public class MeActivity extends AppCompatActivity {
                 }else {
                     // TODO delete the order item in local.
                 }
-            }
+            }*/
 
             mHandler.sendEmptyMessage(UPDATE_VIEW);
         } catch (IOException e) {
