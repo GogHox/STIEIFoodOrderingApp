@@ -32,7 +32,7 @@ public class StartActivity extends AppCompatActivity {
                 startActivity(new Intent(getApplicationContext(), MainActivity.class));
                 finish();
             }
-        }, 1000);//1 second = 1000 milli seconds
+        }, 2500);//1 second = 1000 milli seconds
     }
 
     private void initView() {
