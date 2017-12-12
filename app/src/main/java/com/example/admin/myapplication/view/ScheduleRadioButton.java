@@ -31,11 +31,17 @@ public class ScheduleRadioButton extends RadioButton {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        //
         this.setPadding(ScreenUtils.dp2px(getContext(),10f), ScreenUtils.dp2px(getContext(),10f),
                 ScreenUtils.dp2px(getContext(),10f), ScreenUtils.dp2px(getContext(),10f));
         this.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
         RadioGroup.LayoutParams layoutParams = new RadioGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, RadioGroup.LayoutParams.WRAP_CONTENT);
         this.setLayoutParams(layoutParams);
+        if(isEnabled()){
+            this.setTextColor(getResources().getColor(android.R.color.black));
+        }else{
+            this.setTextColor(getResources().getColor(android.R.color.darker_gray));
+        }
     }
 
 }

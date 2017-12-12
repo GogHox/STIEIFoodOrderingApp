@@ -48,7 +48,7 @@ public class OrderDBHelper extends SQLiteOpenHelper {
 
     public void deleteOrder(int id) {
         SQLiteDatabase db = getWritableDatabase();
-        String sql = "delete from " + TABLE_ORDER + "where id = " + id;
+        String sql = "delete from " + TABLE_ORDER + " where id = " + id;
         db.execSQL(sql);
         db.close();
     }
